@@ -1,0 +1,101 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - internal
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:?ENVIRONMENT is required}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:?EMBEDDING_API_KEY is required}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-gemini}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-gemini-embedding-001}
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-https://generativelanguage.googleapis.com}
+      EMBEDDING_DIMENSION: ${EMBEDDING_DIMENSION:-1536}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gemini-3.5-flash}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://generativelanguage.googleapis.com/v1beta}
+      CHUNK_SIZE: ${CHUNK_SIZE:-900}
+      CHUNK_OVERLAP: ${CHUNK_OVERLAP:-150}
+      TOP_K: ${TOP_K:-5}
+      SIMILARITY_THRESHOLD: ${SIMILARITY_THRESHOLD:-0.25}
+      MAX_UPLOAD_SIZE_MB: ${MAX_UPLOAD_SIZE_MB:-10}
+      CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS is required}
+      UPLOAD_DIR: ${UPLOAD_DIR:-/app/storage/uploads}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ENABLE_DOCS: ${ENABLE_DOCS:-false}
+      ENABLE_REDOC: ${ENABLE_REDOC:-false}
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
+    expose:
+      - "8000"
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - uploads:/app/storage/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - internal
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL is required}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    expose:
+      - "3000"
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - internal
+
+volumes:
+  postgres_data:
+    name: enterprise_knowledge_copilot_postgres_data
+  uploads:
+    name: enterprise_knowledge_copilot_uploads
+
+networks:
+  internal:
+    driver: bridge
