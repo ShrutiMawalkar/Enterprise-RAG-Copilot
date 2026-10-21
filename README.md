@@ -2,7 +2,7 @@
 
 A full-stack GenAI knowledge assistant that helps employees find answers from internal company documents such as SOPs, FAQs, product guides, and policies. It uses Retrieval-Augmented Generation (RAG) to retrieve relevant document context before generating answers.
 
-> **Project status:** The repository contains the application code, frontend, API, database configuration, tests, and Docker setup. Complete local runtime verification with your own Gemini API key and Docker/PostgreSQL environment is still required before describing it as production-deployed.
+> **Project status:** The repository contains the application code, frontend, API, database configuration, tests, and Docker setup. Functional full-stack GenAI application with document ingestion, RAG-based question answering, authentication, conversation history, and a Docker-based development setup.
 
 ## Features
 
