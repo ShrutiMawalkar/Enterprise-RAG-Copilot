@@ -2,129 +2,160 @@
 
 A full-stack GenAI knowledge assistant that helps employees find answers from internal company documents such as SOPs, FAQs, product guides, and policies. It uses Retrieval-Augmented Generation (RAG) to retrieve relevant document context before generating answers.
 
-> **Project status:** The repository contains the application code, frontend, API, database configuration, tests, and Docker setup. Functional full-stack GenAI application with document ingestion, RAG-based question answering, authentication, conversation history, and a Docker-based development setup.
+**Project Status:** Functional full-stack GenAI application featuring document ingestion, RAG-based question answering, authentication, conversation history, an admin dashboard, and a Docker-based development environment.
 
 ## Features
 
-- **Knowledge chat:** Ask questions about ingested company documents.
-- **RAG pipeline:** Extracts, chunks, embeds, and retrieves relevant document passages before answer generation.
-- **Source-aware answers:** Chat responses can include retrieved source information.
-- **Document management:** Admins can upload and manage supported files (PDF, DOCX, TXT, and Markdown).
-- **Authentication:** JWT-based sign-in and registration with role-aware access.
-- **Conversation history:** Conversations are stored and scoped to the authenticated user.
-- **Admin dashboard:** View document ingestion status and manage the knowledge base.
-- **API:** FastAPI endpoints with interactive API documentation available in development.
-- **Persistent vector search:** PostgreSQL with pgvector.
-- **Container setup:** Docker Compose for the frontend, backend, and database.
-- **Quality checks:** Pytest tests and a GitHub Actions CI workflow.
+- **Knowledge Chat:** Ask questions about internal company documents.
+- **RAG Pipeline:** Extracts, chunks, embeds, and retrieves relevant document passages before generating answers.
+- **Source-Aware Answers:** Provides responses grounded in retrieved document context, with available source information.
+- **Document Management:** Supports uploading and managing PDF, DOCX, TXT, and Markdown files.
+- **Authentication:** JWT-based authentication, password hashing, and role-aware access control.
+- **Conversation History:** Stores conversations and scopes them to authenticated users.
+- **Admin Dashboard:** View document ingestion status and manage the knowledge base.
+- **REST API:** FastAPI endpoints with interactive Swagger documentation.
+- **Vector Search:** PostgreSQL with pgvector for persistent vector storage and similarity search.
+- **Containerization:** Docker Compose configuration for the frontend, backend, and database.
+- **Testing and CI:** Pytest test suite and GitHub Actions workflow.
 
-## Tech stack
+## Tech Stack
 
 | Area | Technologies |
 |---|---|
+| Programming Languages | Python, TypeScript, SQL |
 | Frontend | Next.js, React, TypeScript, Tailwind CSS |
-| Backend | Python, FastAPI, REST APIs |
-| GenAI / RAG | LangChain/LangGraph flow, Google Gemini embeddings and generation |
-| Database | PostgreSQL, pgvector, SQLAlchemy, Alembic |
-| Security | JWT authentication, password hashing, role-based access |
+| Backend | FastAPI, Python, REST APIs, Pydantic |
+| GenAI / RAG | Google Gemini, LangChain, LangGraph, RAG |
+| Embeddings and Retrieval | Text embeddings, vector similarity search |
+| Database | PostgreSQL, pgvector, SQLAlchemy |
+| Database Migrations | Alembic |
+| Security | JWT authentication, password hashing, role-based access control |
+| Document Processing | PDF, DOCX, TXT, Markdown extraction and chunking |
 | DevOps | Docker, Docker Compose, GitHub Actions |
 | Testing | Pytest |
+| API Documentation | Swagger UI, OpenAPI |
+| Version Control | Git, GitHub |
 
-## How it works
+## How It Works
 
-1. An administrator uploads a policy, FAQ, or other knowledge document.
-2. The backend extracts the text and splits it into overlapping chunks.
-3. The embedding service converts chunks into vectors and stores them in PostgreSQL/pgvector.
-4. A user asks a question in the web chat.
-5. The retrieval layer finds relevant chunks, and the LLM generates a response grounded in that context.
-6. The chat interface presents the answer and available source information.
+1. An administrator uploads a policy, FAQ, product guide, or other knowledge document.
+2. The backend extracts the document text and splits it into overlapping chunks.
+3. The embedding service converts text chunks into vectors and stores them in PostgreSQL with pgvector.
+4. A user submits a question through the web chat interface.
+5. The retrieval layer searches for relevant document passages.
+6. Google Gemini generates a response using the retrieved context.
+7. The frontend displays the answer and available source information.
 
 ## Architecture
 
 ```text
-Next.js + React frontend
-          |
-          | REST API
-          v
-FastAPI backend ---- JWT authentication
-          |
-          +---- Document extraction / chunking
-          |
-          +---- RAG retrieval + Gemini
-          |
-          v
-PostgreSQL + pgvector
-          |
-          +---- Documents, users, conversations, vectors
+                Next.js + React Frontend
+                          |
+                          | REST API
+                          v
+                    FastAPI Backend
+                          |
+             +------------+------------+
+             |            |            |
+             v            v            v
+        JWT Auth     Document       RAG Pipeline
+                     Processing          |
+             |       Extraction          |
+             |       Chunking            v
+             |       Embeddings     Google Gemini
+             |            |               |
+             +------------+---------------+
+                          |
+                          v
+                 PostgreSQL + pgvector
+                          |
+             +------------+------------+
+             |            |            |
+          Documents     Users      Conversations
+                          |
+                       Vectors
 ```
 
-## Repository structure
+## Repository Structure
 
 ```text
-.
-├── app/                  # FastAPI routes, services, models, RAG logic
+Enterprise-RAG-Copilot/
+├── app/                  # Backend routes, services, models, and RAG logic
 ├── alembic/              # Database migrations
-├── documents/            # Sample company policies and FAQs
+├── documents/            # Sample policies and FAQs
 ├── frontend/             # Next.js web application
-├── scripts/              # Admin and sample-document utilities
-├── tests/                # Unit and integration test foundation
-├── deploy/               # Example reverse-proxy configuration
+├── scripts/              # Admin and document utilities
+├── tests/                # Automated tests
+├── deploy/               # Deployment configuration
 ├── .github/workflows/    # GitHub Actions CI
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
 ├── pyproject.toml
-└── .env.example
+├── alembic.ini
+├── .env.example
+└── README.md
 ```
 
-## Run locally with Docker
+## Getting Started
 
-### Requirements
+### Prerequisites
 
 - Docker Desktop with Docker Compose
-- A Google Gemini API key
-- Git (optional, for cloning)
+- Google Gemini API key
+- Git
+- Node.js 20+ if running the frontend separately
+- Python 3.12+ if running the backend separately
 
-### 1. Clone your repository
-
-Replace the URL with your own GitHub repository URL:
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/enterprise-knowledge-copilot.git
-cd enterprise-knowledge-copilot
+git clone https://github.com/ShrutiMawalkar/Enterprise-RAG-Copilot.git
+cd Enterprise-RAG-Copilot
 ```
 
-### 2. Configure environment variables
+### 2. Configure Environment Variables
 
-**Windows PowerShell:**
+On Windows PowerShell, run:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Open `.env` and set a strong unique `POSTGRES_PASSWORD`, a random `JWT_SECRET_KEY`, and your Gemini API key in `EMBEDDING_API_KEY`.
+Open `.env` and configure the required environment variables, including:
 
-Generate a JWT secret:
+- `POSTGRES_PASSWORD` — a strong, unique database password
+- `JWT_SECRET_KEY` — a securely generated random secret
+- `EMBEDDING_API_KEY` — the Gemini API key, according to the application's configuration
+
+Generate a random JWT secret using:
 
 ```powershell
 python -c "import secrets; print(secrets.token_urlsafe(48))"
 ```
 
-Do not commit `.env` or any real credentials. `.env.example` is only a template.
+Use the actual variable names defined in `.env.example` and follow any additional configuration required by the application.
 
-### 3. Start the application
+**Security:** Never commit `.env` files, API keys, passwords, or other credentials to GitHub.
+
+### 3. Start the Application with Docker
 
 ```powershell
 docker compose up --build -d
 docker compose ps
 ```
 
-Open:
-- Frontend: http://localhost:3000
-- Backend health check: http://localhost:8000/health
-- FastAPI Swagger UI: http://localhost:8000/docs (when enabled in `.env`)
+Once the services are running, open:
 
-To inspect logs:
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:3000 |
+| Backend Health Check | http://localhost:8000/health |
+| FastAPI Swagger UI | http://localhost:8000/docs |
+
+Swagger documentation availability depends on the application configuration.
+
+### 4. View Application Logs
 
 ```powershell
 docker compose logs --tail=100 backend
@@ -132,15 +163,23 @@ docker compose logs --tail=100 frontend
 docker compose logs --tail=100 postgres
 ```
 
-To stop the stack:
+### 5. Stop the Application
 
 ```powershell
 docker compose down
 ```
 
-### Run without Docker
+To stop the services without deleting the database volume, do not add the `-v` flag.
 
-For the backend, use Python 3.12+ and follow the environment, dependency, migration, and Uvicorn instructions in the repository's deployment notes. For the frontend, use Node.js 20+:
+## Running Without Docker
+
+### Backend
+
+Create and activate a Python virtual environment, install the project dependencies, configure environment variables, apply the database migrations, and start the FastAPI application using the repository's configured Uvicorn entry point.
+
+### Frontend
+
+Install Node.js 20+ and run the following commands in PowerShell:
 
 ```powershell
 cd frontend
@@ -149,39 +188,43 @@ npm install
 npm run dev
 ```
 
-## Tests and CI
+Configure the frontend environment variables to point to the local backend API. Use the environment template supplied with the frontend.
 
-Run backend tests inside an environment with dependencies installed:
+## Testing and Continuous Integration
 
-```bash
+The project includes Pytest tests and a GitHub Actions CI workflow.
+
+Run the backend test suite in an environment with the required dependencies installed:
+
+```powershell
 pytest
 ```
 
-The repository includes a GitHub Actions workflow. Tests and provider/database-dependent features should be verified in your own environment before release.
+Additional integration and end-to-end tests can help evaluate document ingestion, retrieval quality, answer relevance, source attribution, and authentication behavior.
 
-## Security notes
+## Security Considerations
 
-- Never commit `.env`, API keys, passwords, JWT secrets, or access tokens.
-- Keep PostgreSQL private in production.
-- Use HTTPS and a secret manager for deployment.
-- The included Docker configuration is a starting point; production deployments should add monitoring, rate limiting, durable background jobs, and cloud/object storage as appropriate.
+- Keep API keys, database passwords, JWT secrets, and access tokens out of source control.
+- Use strong, unique secrets for local and deployed environments.
+- Restrict database access and avoid exposing PostgreSQL publicly.
+- Use HTTPS and a secure secrets manager for deployed environments.
+- Apply appropriate authorization checks to document management and administrative operations.
 
-## Current limitations / next steps
+## Future Enhancements
 
-- Run the full test suite and end-to-end checks locally with Docker, PostgreSQL/pgvector, and valid Gemini credentials.
-- Verify document upload → ingestion → retrieval → answer → source citation end to end.
-- Add automated integration tests for the database and external AI provider.
-- For cloud deployment, configure persistent/object storage and secrets rather than relying on local container storage.
-- Capture real screenshots from the running application and add them to the README.
+- Expand automated integration and end-to-end test coverage.
+- Improve monitoring, structured logging, and performance evaluation.
+- Enhance retrieval quality and evaluate answer relevance across diverse enterprise documents.
+- Add scalable document storage and production cloud deployment.
+- Introduce rate limiting and durable background processing for larger workloads.
 
 ## Author
 
 **Shruti Mawalkar**
 
-Built as a portfolio project exploring full-stack development, GenAI, RAG, APIs, authentication, databases, and containerized workflows.
+Built as a portfolio project exploring full-stack development, Generative AI, RAG, REST APIs, authentication, vector databases, and containerized application workflows.
 
-## Project overview visual
+## Project Links
 
-The image below is a **concept/portfolio graphic**, not a screenshot captured from a running instance of the application.
+- **GitHub Repository:** https://github.com/ShrutiMawalkar/Enterprise-RAG-Copilot
 
-![Project overview concept](docs/project-overview-concept.png)
